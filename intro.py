@@ -9,10 +9,8 @@ canvas = tk.Canvas(root, width=w, height=h, borderwidth=0,
                    highlightthickness=0, bg="gray")
 canvas.grid()
 
-
 def _create_circle(self, x, y, r, **kwargs):
     return self.create_oval(x - r, y - r, x + r, y + r, **kwargs)
-
 
 tk.Canvas.create_circle = _create_circle
 
@@ -76,6 +74,24 @@ def _moveCircle(self, item, x, y):
 
 tk.Canvas.moveCircle = _moveCircle
 
+def appendLists(b, xV, yV, xP, yP):
+    ballList.append(b)
+    xVel.append(xVelTemp)
+    yVel.append(yVelTemp)
+    xPos.append(xPosTemp)
+    yPos.append(yPosTemp)
+
+def deleteOldBall(i):
+    print("Removing Index: ", i)
+    print("Length of ballList: ", len(ballList))
+    del ballList[i]
+    del xVel[i]
+    del yVel[i]
+    del xPos[i]
+    del yPos[i]
+    
+#def checkCollision():
+#    if
 
 def randomAgent():
     # Randomly generate agents
@@ -110,17 +126,28 @@ def randomAgent():
 
 r = 5
 laneW = 50
-canvas.draw_streets(laneW)
-
 xVel = []
 yVel = []
+xPos = []
+yPos = []
 ballList = []
+crashCount = 0
 
-#ball = canvas.create_circle(0, h/2-laneW/2, r, fill="green", width=0)
+streets = canvas.draw_streets(laneW)
+s = '# balls: %i \n# crashes: %i' % (len(ballList) , 100)
+text = canvas.create_text(100, 100, text = s)
+startTime = time.time()
 
 while True:
+    s = '    Number of balls: %i \n\
+    Number of collisions: %i \n\
+    Time(s): %i' \
+    % (len(ballList) , 100, time.time() - startTime)
+
+    canvas.itemconfig(text, text = s)
     create, xPosTemp, yPosTemp, xVelTemp, yVelTemp = randomAgent()
     # print randomAgent()
+
     # MAKE ALL SAME SPEED
     if xVelTemp > 0:
         xVelTemp = 2
@@ -131,16 +158,17 @@ while True:
     if yVelTemp < 0:
         yVelTemp = -2
 
+    #DRAW NEW CIRCLE
     if create == 1:
         # print "created"
         b = canvas.create_circle(xPosTemp, yPosTemp, r, fill="green", width=0)
-        # print b
-        ballList.append(b)
-        xVel.append(xVelTemp)
-        yVel.append(yVelTemp)
+        appendLists(b, xVelTemp, yVelTemp, xPosTemp, yPosTemp)
+
 
     i = 0
     for b, xV, yV in zip(ballList, xVel, yVel):
+        #for b2, xP2, yP2
+    #        if b.coords
         canvas.move(b, xV, yV)
 
         # DELETE OLD BALLS
@@ -152,14 +180,10 @@ while True:
             if pos[0] < -10 or pos[1] < -10 or pos[2] > w + 10 or pos[3] > h + 10:
                 # print "should delete: ", pos
                 canvas.delete(b)
-                print("Removing Index: ", i)
-                print("Length of ballList: ", len(ballList))
-                del ballList[i]
-                del xVel[i]
-                del yVel[i]
+                deleteOldBall(i)
+
 
         i = i + 1
-
     canvas.bind("<Button-1>", callback)
     root.update()
     time.sleep(0.01)
