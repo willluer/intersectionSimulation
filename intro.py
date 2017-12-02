@@ -89,7 +89,7 @@ def deleteOldBall(i):
     del yVel[i]
     del xPos[i]
     del yPos[i]
-    
+
 #def checkCollision():
 #    if
 
@@ -164,7 +164,6 @@ while True:
         b = canvas.create_circle(xPosTemp, yPosTemp, r, fill="green", width=0)
         appendLists(b, xVelTemp, yVelTemp, xPosTemp, yPosTemp)
 
-
     i = 0
     for b, xV, yV in zip(ballList, xVel, yVel):
         #for b2, xP2, yP2
@@ -172,17 +171,12 @@ while True:
         canvas.move(b, xV, yV)
 
         # DELETE OLD BALLS
-        # if len(ballList) % 5 == 0:
-        # print "Number of balls in list: ", len(ballList)
         pos = canvas.coords(b)
-
         if len(pos) == 4:
             if pos[0] < -10 or pos[1] < -10 or pos[2] > w + 10 or pos[3] > h + 10:
                 # print "should delete: ", pos
                 canvas.delete(b)
                 deleteOldBall(i)
-
-
         i = i + 1
     canvas.bind("<Button-1>", callback)
     root.update()
