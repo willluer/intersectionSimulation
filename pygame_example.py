@@ -1,6 +1,6 @@
 import pygame as pg
 from enum import Enum
-# from random import randint
+from random import randint
 
 
 BACKGROUND_COLOR = pg.Color("slategray")
@@ -9,11 +9,12 @@ w = 600
 h = 600
 laneW = 50
 
+total_collisions = 0
 car_pos = []
 
 
 def debug_text(main_surface, text_list):
-    main_surface.fill((0, 100, 100))
+    main_surface.fill(BACKGROUND_COLOR)
     for i in range(0, len(text_list)):
         main_surface.blit(font.render(
             str(text_list[i]), True, (255, 0, 0)), (10, 10 + (10 * i)))
@@ -39,7 +40,6 @@ class Car(pg.sprite.Sprite):
         self.moving = True
 
     def update_position(self):
-        print(self.dir, self.moving, self.rect)
         if self.moving:
             if (self.rect.x >= 0 and self.rect.x <= w and
                     self.rect.y >= 0 and self.rect.y <= h):
@@ -73,6 +73,16 @@ class Game:
         self.clock = pg.time.Clock()
 
     def event_loop(self):
+        add_car = randint(0, 20)
+        if add_car == 0:
+            Car(Direction.North, self.cars)
+        elif add_car == 1:
+            Car(Direction.South, self.cars)
+        elif add_car == 2:
+            Car(Direction.East, self.cars)
+        elif add_car == 3:
+            Car(Direction.West, self.cars)
+
         global car_pos
         car_pos = []
         removed = []
@@ -80,23 +90,27 @@ class Game:
             car.update_position()
             if not car.moving:
                 removed.append(car)
-            car_pos.append((car.rect.x, car.rect.y))
+            else:
+                car_pos.append((car.rect.x, car.rect.y))
         for car in removed:
-            self.cars.remove(car)
-            Car(Direction.South, self.cars)
+            car.kill()
+            car.image.fill(BACKGROUND_COLOR)
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 self.done = True
 
     def check_collide(self):
+        global total_collisions
         collision = False
         for car in self.cars:
-            colliders = pg.sprite.spritecollide(car, self.cars, False)
-            if len(colliders) > 1:
-                collision = True
-                car.moving = False
-                for other in colliders:
-                    other.moving = False
+            if car.moving:
+                colliders = pg.sprite.spritecollide(car, self.cars, False)
+                if len(colliders) > 1:
+                    total_collisions += 1
+                    collision = True
+                    car.moving = False
+                    for other in colliders:
+                        other.moving = False
 
         if collision:
             pg.display.set_caption('collide')
@@ -105,14 +119,15 @@ class Game:
 
     def draw(self):
         self.screen.fill(BACKGROUND_COLOR)
-        debug_text(self.screen, car_pos)
+        debug_text(self.screen, ["Collisions: {0}".format(
+            total_collisions)] + car_pos)
         self.cars.draw(self.screen)
 
     def run(self):
         while not self.done:
             self.event_loop()
-            self.draw()
             self.check_collide()
+            self.draw()
             pg.display.update()
             self.clock.tick(self.fps)
 
