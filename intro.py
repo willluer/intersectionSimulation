@@ -116,7 +116,7 @@ xVel = []
 yVel = []
 ballList = []
 
-#ball = canvas.create_circle(0, h/2-laneW/2, r, fill="green", width=0)
+# ball = canvas.create_circle(0, h/2-laneW/2, r, fill="green", width=0)
 
 while True:
     create, xPosTemp, yPosTemp, xVelTemp, yVelTemp = randomAgent()
@@ -145,11 +145,12 @@ while True:
 
         # DELETE OLD BALLS
         # if len(ballList) % 5 == 0:
-        # print "Number of balls in list: ", len(ballList)
+        #    print "Number of balls in list: ", len(ballList)
         pos = canvas.coords(b)
 
         if len(pos) == 4:
-            if pos[0] < -10 or pos[1] < -10 or pos[2] > w + 10 or pos[3] > h + 10:
+            if (pos[0] < -10 or pos[1] < -10 or
+                pos[2] > w + 10 or pos[3] > h + 10):
                 # print "should delete: ", pos
                 canvas.delete(b)
                 print("Removing Index: ", i)
@@ -157,6 +158,14 @@ while True:
                 del ballList[i]
                 del xVel[i]
                 del yVel[i]
+            # Stop Right bound cars at intersection
+            elif pos[0] < .4 * w and pos[0] > .39 * w:
+                xVel[i] = 0
+                yVel[i] = 0
+            # Stop Left bound cars at intersection
+            elif pos[0] > .59 * w and pos[0] < .6 * w:
+                xVel[i] = 0
+                yVel[i] = 0
 
         i = i + 1
 
