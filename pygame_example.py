@@ -9,12 +9,14 @@ w = 600
 h = 600
 laneW = 50
 
+car_pos = []
+
 
 def debug_text(main_surface, text_list):
     main_surface.fill((0, 100, 100))
-    for x in range(0, len(text_list)):
+    for i in range(0, len(text_list)):
         main_surface.blit(font.render(
-            str(text_list[x]), True, (0, 255, 0)), (10, 10 + (10 * x)))
+            str(text_list[i]), True, (255, 0, 0)), (10, 10 + (10 * i)))
 
 
 class Car(pg.sprite.Sprite):
@@ -71,6 +73,7 @@ class Game:
         self.clock = pg.time.Clock()
 
     def event_loop(self):
+        global car_pos
         car_pos = []
         removed = []
         for car in self.cars:
@@ -81,7 +84,6 @@ class Game:
         for car in removed:
             self.cars.remove(car)
             Car(Direction.South, self.cars)
-        debug_text(self.screen, car_pos)
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 self.done = True
@@ -103,6 +105,7 @@ class Game:
 
     def draw(self):
         self.screen.fill(BACKGROUND_COLOR)
+        debug_text(self.screen, car_pos)
         self.cars.draw(self.screen)
 
     def run(self):
@@ -116,7 +119,7 @@ class Game:
 
 if __name__ == '__main__':
     pg.init()
-    font = pg.font.Font(None, 32)
+    font = pg.font.Font(None, 20)
     game = Game()
     game.run()
 
