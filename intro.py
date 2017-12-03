@@ -1,6 +1,7 @@
 import tkinter as tk
 import time
 import random
+import math
 
 root = tk.Tk()
 w = 600
@@ -65,16 +66,51 @@ def _draw_streets(self, laneWidth):
 tk.Canvas.draw_streets = _draw_streets
 
 
-def _moveCircle(self, item, x, y):
-    print(self.coords(item))
-    self.coords(item)[0] = self.coords(item)[0] + x
-    self.coords(item)[2] = self.coords(item)[2] + x
-    self.coords(item)[1] = self.coords(item)[1] + y
-    self.coords(item)[3] = self.coords(item)[3] + y
-    print(self.coords(item))
+def appendLists(b, xV, yV, xP, yP):
+    ballList.append(b)
+    xVel.append(xVelTemp)
+    yVel.append(yVelTemp)
+    xPos.append(xPosTemp)
+    yPos.append(yPosTemp)
 
 
-tk.Canvas.moveCircle = _moveCircle
+def deleteOldBall(b):
+    i = ballList.index(b)
+    #print("Removing Index: ", i)
+    #print("Length of ballList: ", len(ballList))
+    #print("ballList: ", ballList)
+    canvas.delete(b)
+    del ballList[i]
+    del xVel[i]
+    del yVel[i]
+    del xPos[i]
+    del yPos[i]
+
+
+def checkCollision(x1, x2, y1, y2):
+    if 6 * r > math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)):
+        return 1
+    else:
+        return 0
+
+
+def checkCollision2(b1, b2):
+    pos = canvas.coords(b1)
+    pos2 = canvas.coords(b2)
+    x1 = (pos[0] + pos[2]) / 2
+    y1 = (pos[1] + pos[3]) / 2
+    x2 = (pos2[0] + pos2[2]) / 2
+    y2 = (pos[1] + pos2[3]) / 2
+
+    if 2 * r > math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)):
+        canvas.create_circle(x1, y1, r, fill="red", width=0)
+        print("Crash, removing balls: ", b1, b2)
+        deleteOldBall(b1)
+        deleteOldBall(b2)
+
+        return 1
+    else:
+        return 0
 
 
 def randomAgent():
@@ -104,72 +140,93 @@ def randomAgent():
         xVelTemp = -magnitude
 
     # Create agent 5% of the time
-    create = random.randint(1, 20)
+    create = random.randint(1, 10)
     return create, xPosTemp, yPosTemp, xVelTemp, yVelTemp
 
 
 r = 5
 laneW = 50
-canvas.draw_streets(laneW)
-
 xVel = []
 yVel = []
+xPos = []
+yPos = []
 ballList = []
+collisionCount = 0
 
-# ball = canvas.create_circle(0, h/2-laneW/2, r, fill="green", width=0)
+streets = canvas.draw_streets(laneW)
+s = '# balls: %i \n# crashes: %i' % (len(ballList), 100)
+text = canvas.create_text(100, 100, text=s)
+startTime = time.time()
 
 while True:
+    # UPDATE TEXT DISPLAY
+    s = '    Number of balls: %i \n\
+    Number of collisions: %i \n\
+    Time(s): %i' \
+    % (len(ballList), collisionCount, time.time() - startTime)
+    canvas.itemconfig(text, text=s)
+
+    # CREATE RANDOM AGENT
     create, xPosTemp, yPosTemp, xVelTemp, yVelTemp = randomAgent()
-    # print randomAgent()
-    # MAKE ALL SAME SPEED
+
+    # MAKE ALL SAME SPEED (not necessary but simplifies problem)
     if xVelTemp > 0:
-        xVelTemp = 2
+        xVelTemp = 4
     if xVelTemp < 0:
-        xVelTemp = -2
+        xVelTemp = -4
     if yVelTemp > 0:
-        yVelTemp = 2
+        yVelTemp = 4
     if yVelTemp < 0:
-        yVelTemp = -2
+        yVelTemp = -4
 
+    # DRAW NEW CIRCLE
     if create == 1:
-        # print "created"
-        b = canvas.create_circle(xPosTemp, yPosTemp, r, fill="green", width=0)
-        # print b
-        ballList.append(b)
-        xVel.append(xVelTemp)
-        yVel.append(yVelTemp)
+        if len(ballList) == 0:  # if no balls yet just draw it
+            newBall = canvas.create_circle(
+                xPosTemp, yPosTemp, r, fill="green", width=0)
+            appendLists(newBall, xVelTemp, yVelTemp, xPosTemp, yPosTemp)
+            #print("First ball added", newBall)
 
+        else:
+            add = True
+            for oldBall in ballList:
+                pos = canvas.coords(oldBall)
+                x = (pos[0] + pos[2]) / 2
+                y = (pos[1] + pos[3]) / 2
+                if checkCollision(x, xPosTemp, y, yPosTemp) == 1:
+                    add = False
+            if(add):
+                newBall = canvas.create_circle(
+                    xPosTemp, yPosTemp, r, fill="green", width=0)
+                appendLists(newBall, xVelTemp, yVelTemp, xPosTemp, yPosTemp)
+                #print("New ball added", newBall)
     i = 0
     for b, xV, yV in zip(ballList, xVel, yVel):
+        # CHECK FOR COLLISIONS
+        j = i + 1
+        while j < len(ballList):
+            b2 = ballList[j]
+            val = checkCollision2(b, b2)
+            collisionCount = collisionCount + val
+            if val == 1:
+                break
+            j = j + 1
+
+        # UPDATE LOCATION
         canvas.move(b, xV, yV)
 
         # DELETE OLD BALLS
-        # if len(ballList) % 5 == 0:
-        #    print "Number of balls in list: ", len(ballList)
-        pos = canvas.coords(b)
 
+        pos = canvas.coords(b)
         if len(pos) == 4:
             if (pos[0] < -10 or pos[1] < -10 or
-                pos[2] > w + 10 or pos[3] > h + 10):
+                    pos[2] > w + 10 or pos[3] > h + 10):
                 # print "should delete: ", pos
-                canvas.delete(b)
-                print("Removing Index: ", i)
-                print("Length of ballList: ", len(ballList))
-                del ballList[i]
-                del xVel[i]
-                del yVel[i]
-            # Stop Right bound cars at intersection
-            elif pos[0] < .4 * w and pos[0] > .39 * w:
-                xVel[i] = 0
-                yVel[i] = 0
-            # Stop Left bound cars at intersection
-            elif pos[0] > .59 * w and pos[0] < .6 * w:
-                xVel[i] = 0
-                yVel[i] = 0
+                deleteOldBall(b)
 
         i = i + 1
 
     canvas.bind("<Button-1>", callback)
     root.update()
-    time.sleep(0.01)
+    time.sleep(0.001)
 root.mainloop()
