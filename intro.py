@@ -133,7 +133,7 @@ def randomAgent():
         xVelTemp = -magnitude
 
     # Create agent 5% of the time
-    create = random.randint(1, 10)
+    create = random.randint(1, 20)
     return create, xPosTemp, yPosTemp, xVelTemp, yVelTemp
 
 
