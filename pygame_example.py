@@ -5,6 +5,7 @@ from random import randint
 
 BACKGROUND_COLOR = pg.Color("slategray")
 Direction = Enum('Direction', 'North South East West')
+Traffic_Signal = Enum('Traffic_Signal', 'Green Yellow Red')
 w = 600
 h = 600
 laneW = 50
@@ -37,10 +38,43 @@ class Car(pg.sprite.Sprite):
         self.rect = pg.Rect(x, y, 20, 20)
 
         self.dir = dir
-        self.moving = True
+        self.remove = False
+        self.at_light = False
 
-    def update_position(self):
-        if self.moving:
+    def at_intersection(self):
+        at_intersection = False
+
+        northward_stop = h / 2 - laneW / 2
+        southward_stop = h / 2 + laneW / 2
+        eastward_stop = w / 2 - laneW / 2
+        westward_stop = w / 2 + laneW / 2
+
+        if self.dir == Direction.North:
+            if self.rect.y > (northward_stop + 20) and \
+                    self.rect.y < (northward_stop + 25):
+                at_intersection = True
+        elif self.dir == Direction.South:
+            if self.rect.y > (southward_stop - 25) and \
+                    self.rect.y < (southward_stop - 20):
+                at_intersection = True
+        elif self.dir == Direction.East:
+            if self.rect.x > (eastward_stop - 25) and \
+                    self.rect.x < (eastward_stop - 20):
+                at_intersection = True
+        elif self.dir == Direction.West:
+            if self.rect.x > (westward_stop + 20) and \
+                    self.rect.x < (westward_stop + 25):
+                at_intersection = True
+
+        return at_intersection
+
+    def update_position(self, light):
+        # if at a red light, don't move
+        if (self.at_light or self.at_intersection()) and light == Traffic_Signal.Red:
+            # set at_light so we don't have to check at_intersection() every frame
+            self.at_light = True
+        else:
+            # check if the car is on screen
             if (self.rect.x >= 0 and self.rect.x <= w and
                     self.rect.y >= 0 and self.rect.y <= h):
                 if self.dir == Direction.North:
@@ -51,13 +85,13 @@ class Car(pg.sprite.Sprite):
                     self.rect.x += 2
                 elif self.dir == Direction.West:
                     self.rect.x -= 2
+            # remove off screen cars
             else:
-                self.moving = False
+                self.remove = True
+            self.at_light = False
 
     def draw(self, surface):
         self.rect = self.rect.clamp(surface.get_rect())
-        pg.display.draw.circle(self.image, (0, 0, 255),
-                               (self.rect.x, self.rect.y), 10, 0)
         surface.blit(self.image, self.rect)
 
 
@@ -67,17 +101,17 @@ class Game:
         self.screen = pg.display.set_mode((w, h))
         self.cars = pg.sprite.Group()
 
-        Car(Direction.North, self.cars)
-
         self.done = False
         self.fps = 60.0
         self.clock = pg.time.Clock()
+
+        self.green_lights = [Direction.North, Direction.East]
 
     def event_loop(self):
         self.cooldown = (self.cooldown + 1) % 5
 
         if self.cooldown == 0:
-            add_car = randint(0, 20)
+            add_car = randint(0, 10)
             if add_car == 0:
                 Car(Direction.North, self.cars)
             elif add_car == 1:
@@ -91,8 +125,12 @@ class Game:
         car_pos = []
         removed = []
         for car in self.cars:
-            car.update_position()
-            if not car.moving:
+            if car.dir in self.green_lights:
+                light = Traffic_Signal.Green
+            else:
+                light = Traffic_Signal.Red
+            car.update_position(light)
+            if car.remove:
                 removed.append(car)
             else:
                 car_pos.append((car.rect.x, car.rect.y))
@@ -107,19 +145,19 @@ class Game:
         global total_collisions
         collision = False
         for car in self.cars:
-            if car.moving:
+            if not car.remove:
                 colliders = pg.sprite.spritecollide(car, self.cars, False)
                 if len(colliders) > 1:
                     total_collisions += 1
                     collision = True
-                    car.moving = False
+                    car.remove = True
                     for other in colliders:
-                        other.moving = False
+                        other.remove = True
 
         if collision:
-            pg.display.set_caption('collide')
+            pg.display.set_caption('Collision')
         else:
-            pg.display.set_caption('do not collide')
+            pg.display.set_caption('No Collide')
 
     def draw(self):
         self.screen.fill(BACKGROUND_COLOR)
