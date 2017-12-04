@@ -63,6 +63,7 @@ class Car(pg.sprite.Sprite):
 
 class Game:
     def __init__(self):
+        self.cooldown = 0
         self.screen = pg.display.set_mode((w, h))
         self.cars = pg.sprite.Group()
 
@@ -73,15 +74,18 @@ class Game:
         self.clock = pg.time.Clock()
 
     def event_loop(self):
-        add_car = randint(0, 20)
-        if add_car == 0:
-            Car(Direction.North, self.cars)
-        elif add_car == 1:
-            Car(Direction.South, self.cars)
-        elif add_car == 2:
-            Car(Direction.East, self.cars)
-        elif add_car == 3:
-            Car(Direction.West, self.cars)
+        self.cooldown = (self.cooldown + 1) % 5
+
+        if self.cooldown == 0:
+            add_car = randint(0, 20)
+            if add_car == 0:
+                Car(Direction.North, self.cars)
+            elif add_car == 1:
+                Car(Direction.South, self.cars)
+            elif add_car == 2:
+                Car(Direction.East, self.cars)
+            elif add_car == 3:
+                Car(Direction.West, self.cars)
 
         global car_pos
         car_pos = []
