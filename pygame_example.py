@@ -3,7 +3,18 @@ import time
 from enum import Enum
 from random import randint
 
-
+#WRL next steps
+#1. Add current number of cars on the screen
+#2. Add stoplight graphic to frame so we can see who is supposed to stoplight
+#3. Remove spawn collisions
+#4. Stop all cars in lane at red light
+#5. Research adjusting sprite speed
+#6. For AI we will need:
+    # - Car positions
+    # - Car velocity
+    # - Number of collisions
+    # - Time taken for each car to cross (so AI doesn't just stop two lanes of traffic the whole time)
+    
 BACKGROUND_COLOR = pg.Color("slategray")
 Direction = Enum('Direction', 'North South East West')
 Traffic_Signal = Enum('Traffic_Signal', 'Green Yellow Red')
