@@ -1,4 +1,5 @@
 import pygame as pg
+import time
 from enum import Enum
 from random import randint
 
@@ -11,6 +12,7 @@ h = 600
 laneW = 50
 
 total_collisions = 0
+total_cars = 0
 car_pos = []
 
 
@@ -18,7 +20,7 @@ def debug_text(main_surface, text_list):
     main_surface.fill(BACKGROUND_COLOR)
     for i in range(0, len(text_list)):
         main_surface.blit(font.render(
-            str(text_list[i]), True, (255, 0, 0)), (10, 10 + (10 * i)))
+            str(text_list[i]), True, (0, 0, 255)), (10, 10 + (10 * i)))
 
 
 class Car(pg.sprite.Sprite):
@@ -70,8 +72,10 @@ class Car(pg.sprite.Sprite):
 
     def update_position(self, light):
         # if at a red light, don't move
-        if (self.at_light or self.at_intersection()) and light == Traffic_Signal.Red:
-            # set at_light so we don't have to check at_intersection() every frame
+        if (self.at_light or self.at_intersection()) and \
+                light == Traffic_Signal.Red:
+            # set at_light so we don't have to check
+            # at_intersection() every frame
             self.at_light = True
         else:
             # check if the car is on screen
@@ -108,49 +112,71 @@ class Game:
         self.green_lights = [Direction.North, Direction.East]
 
     def event_loop(self):
+        global total_cars
+        # every 5th frame have a chance at adding a car
         self.cooldown = (self.cooldown + 1) % 5
 
         if self.cooldown == 0:
             add_car = randint(0, 10)
             if add_car == 0:
                 Car(Direction.North, self.cars)
+                total_cars += 1
             elif add_car == 1:
                 Car(Direction.South, self.cars)
+                total_cars += 1
             elif add_car == 2:
                 Car(Direction.East, self.cars)
+                total_cars += 1
             elif add_car == 3:
                 Car(Direction.West, self.cars)
+                total_cars += 1
 
         global car_pos
         car_pos = []
         removed = []
         for car in self.cars:
+            # check for green light in the direction this car is travelling
             if car.dir in self.green_lights:
                 light = Traffic_Signal.Green
             else:
                 light = Traffic_Signal.Red
+            # move
             car.update_position(light)
+
+            # if we should remove the car add it to the list
             if car.remove:
                 removed.append(car)
+            # otherwise track its location
             else:
                 car_pos.append((car.rect.x, car.rect.y))
+        # remove all the cars in removed
         for car in removed:
             car.kill()
             car.image.fill(BACKGROUND_COLOR)
+
         for event in pg.event.get():
+            # if the user hit the 'X'
             if event.type == pg.QUIT:
                 self.done = True
 
     def check_collide(self):
         global total_collisions
         collision = False
+        # check all the cars for collisions
         for car in self.cars:
+            # ignore cars already marked for removal
             if not car.remove:
+                # returns a list of the cars in self.cars
+                # that collided with car _including_ car
                 colliders = pg.sprite.spritecollide(car, self.cars, False)
+                # car will always collide with itself, so check
+                # for more than 1 collision
                 if len(colliders) > 1:
                     total_collisions += 1
                     collision = True
+                    # mark the car for removal
                     car.remove = True
+                    # mark the other cars involved in the collsion for removal
                     for other in colliders:
                         other.remove = True
 
@@ -160,9 +186,16 @@ class Game:
             pg.display.set_caption('No Collide')
 
     def draw(self):
+        elapsed = int(time.time() - start_time)
+
         self.screen.fill(BACKGROUND_COLOR)
-        debug_text(self.screen, ["Collisions: {0}".format(
-            total_collisions)] + car_pos)
+
+        collisions_str = "Collisions: {}".format(total_collisions)
+        total_cars_str = "Total Cars: {}".format(total_cars)
+        time_str = "Time        : {}".format(elapsed)
+
+        debug_text(self.screen, [collisions_str,
+                                 total_cars_str, time_str] + car_pos)
         self.cars.draw(self.screen)
 
     def run(self):
@@ -175,9 +208,11 @@ class Game:
 
 
 if __name__ == '__main__':
+    global start_time
     pg.init()
-    font = pg.font.Font(None, 20)
+    font = pg.font.Font(None, 15)
     game = Game()
+    start_time = time.time()
     game.run()
 
 pg.quit()
