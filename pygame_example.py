@@ -6,7 +6,6 @@ from random import randint
 # WRL next steps
 # 1. Add current number of cars on the screen
 # 2. Add stoplight graphic to frame so we can see who is supposed to stoplight
-# 3. Remove spawn collisions
 # 4. Stop all cars in lane at red light
 # 5. Research adjusting sprite speed
 # 6. For AI we will need:
