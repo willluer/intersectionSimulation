@@ -142,18 +142,25 @@ class Game:
 
         if self.cooldown == 0:
             add_car = randint(0, 10)
+            newCar = None
             if add_car == 0:
-                Car(Direction.North, self.cars)
+                newCar = Car(Direction.North, self.cars)
                 total_cars += 1
             elif add_car == 1:
-                Car(Direction.South, self.cars)
+                newCar = Car(Direction.South, self.cars)
                 total_cars += 1
             elif add_car == 2:
-                Car(Direction.East, self.cars)
+                newCar = Car(Direction.East, self.cars)
                 total_cars += 1
             elif add_car == 3:
-                Car(Direction.West, self.cars)
+                newCar = Car(Direction.West, self.cars)
                 total_cars += 1
+            # If the newCar would collide, don't add it
+            if newCar is not None and \
+                    len(pg.sprite.spritecollide(newCar, self.cars, False)) > 1:
+                newCar.kill()
+                newCar.image.fill(BACKGROUND_COLOR)
+                total_cars -= 1
 
         global car_pos
         car_pos = []
