@@ -114,7 +114,8 @@ class Car(pg.sprite.Sprite):
                         self.rect.x += 2
             # remove off screen cars
             else:
-                self.remove = True
+                self.kill()
+                self.image.fill(BACKGROUND_COLOR)
             self.at_light = False
 
     def draw(self, surface):
@@ -204,9 +205,8 @@ class Game:
                 if len(colliders) > 1:
                     total_collisions += 1
                     collision = True
-                    # mark the car for removal
-                    car.remove = True
-                    # mark the other cars involved in the collsion for removal
+
+                    # mark the cars involved in the collsion for removal
                     for other in colliders:
                         other.remove = True
 
