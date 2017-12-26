@@ -34,6 +34,8 @@ class Game:
 
     def __init__(self):
         self.cooldown = 0
+        self.light_change = 0
+
         self.screen = pg.display.set_mode((w, h))
         self.cars = pg.sprite.Group()
 
@@ -48,6 +50,9 @@ class Game:
         global total_cars
         # every 5th frame have a chance at adding a car
         self.cooldown = (self.cooldown + 1) % 5
+
+        # every 20 frames, change lights
+        self.light_change = (self.light_change + 1) % 150
 
         if self.cooldown == 0:
             add_car = randint(0, 10)
@@ -75,6 +80,15 @@ class Game:
                 newCar.kill()
                 newCar.image.fill(BACKGROUND_COLOR)
                 total_cars -= 1
+
+        if self.light_change < 40:
+            self.green_lights = [Direction.North, Direction.South]
+        elif self.light_change < 80:
+            self.green_lights = []
+        elif self.light_change < 120:
+            self.green_lights = [Direction.East, Direction.West]
+        else:
+            self.green_lights = []
 
         global car_pos
         car_pos = []
