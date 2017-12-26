@@ -20,7 +20,7 @@ Direction = Enum('Direction', 'North South East West')
 Traffic_Signal = Enum('Traffic_Signal', 'Green Yellow Red')
 w = 600
 h = 600
-laneW = 50
+laneW = 45
 
 total_collisions = 0
 total_cars = 0
@@ -63,12 +63,12 @@ class Car(pg.sprite.Sprite):
         westward_stop = w / 2 + laneW / 2
 
         if self.dir == Direction.North:
-            if self.rect.y > (northward_stop + 20) and \
-                    self.rect.y < (northward_stop + 25):
+            if self.rect.y > (northward_stop + 65) and \
+                    self.rect.y < (northward_stop + 70):
                 at_intersection = True
         elif self.dir == Direction.South:
-            if self.rect.y > (southward_stop - 25) and \
-                    self.rect.y < (southward_stop - 20):
+            if self.rect.y > (southward_stop - 70) and \
+                    self.rect.y < (southward_stop - 65):
                 at_intersection = True
         elif self.dir == Direction.East:
             if self.rect.x > (eastward_stop - 25) and \
@@ -133,7 +133,8 @@ class Game:
         self.fps = 60.0
         self.clock = pg.time.Clock()
 
-        self.green_lights = [Direction.North, Direction.East]
+        self.green_lights = [Direction.North, Direction.South, 
+                             Direction.East, Direction.West]
 
     def event_loop(self):
         global total_cars
