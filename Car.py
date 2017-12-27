@@ -1,6 +1,8 @@
 import pygame as pg
-from global_vars import BACKGROUND_COLOR, Direction, Traffic_Signal, \
-    h, w, laneW
+
+import global_vars as gv
+from global_vars import Direction
+from global_vars import Traffic_Signal
 
 
 class Car(pg.sprite.Sprite):
@@ -17,10 +19,10 @@ class Car(pg.sprite.Sprite):
     def at_intersection(self):
         at_intersection = False
 
-        northward_stop = h / 2 - laneW / 2
-        southward_stop = h / 2 + laneW / 2
-        eastward_stop = w / 2 - laneW / 2
-        westward_stop = w / 2 + laneW / 2
+        northward_stop = gv.h / 2 - gv.laneW / 2
+        southward_stop = gv.h / 2 + gv.laneW / 2
+        eastward_stop = gv.w / 2 - gv.laneW / 2
+        westward_stop = gv.w / 2 + gv.laneW / 2
 
         if self.dir == Direction.North:
             if self.rect.y > (northward_stop + 65) and \
@@ -50,8 +52,8 @@ class Car(pg.sprite.Sprite):
             self.at_light = True
         else:
             # check if the car is on screen
-            if (self.rect.x >= 0 and self.rect.x <= w and
-                    self.rect.y >= 0 and self.rect.y <= h):
+            if (self.rect.x >= 0 and self.rect.x <= gv.w and
+                    self.rect.y >= 0 and self.rect.y <= gv.h):
                 if self.dir == Direction.North:
                     self.rect.y -= 2
 
@@ -75,7 +77,8 @@ class Car(pg.sprite.Sprite):
             # remove off screen cars
             else:
                 self.kill()
-                self.image.fill(BACKGROUND_COLOR)
+                self.image.fill(gv.BACKGROUND_COLOR)
+                gv.current_cars -= 1
             self.at_light = False
 
     def draw(self, surface):

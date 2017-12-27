@@ -2,9 +2,11 @@ import pygame as pg
 import time
 from random import randint
 
-from global_vars import BACKGROUND_COLOR, Direction, Traffic_Signal, \
-    h, w, laneW
 from Car import Car
+
+import global_vars as gv
+from global_vars import Direction
+from global_vars import Traffic_Signal
 
 # WRL next steps
 # 1. Add current number of cars on the screen
@@ -24,7 +26,7 @@ car_pos = []
 
 
 def debug_text(main_surface, text_list):
-    main_surface.fill(BACKGROUND_COLOR)
+    main_surface.fill(gv.BACKGROUND_COLOR)
     for i in range(0, len(text_list)):
         main_surface.blit(font.render(
             str(text_list[i]), True, (0, 0, 255)), (10, 10 + (10 * i)))
@@ -36,7 +38,7 @@ class Game:
         self.cooldown = 0
         self.light_change = 0
 
-        self.screen = pg.display.set_mode((w, h))
+        self.screen = pg.display.set_mode((gv.w, gv.h))
         self.cars = pg.sprite.Group()
 
         self.done = False
@@ -60,26 +62,31 @@ class Game:
 
             if add_car == 0:
                 newCar = Car(Direction.North, int(
-                    w / 2 + laneW / 2), h, self.cars)
+                    gv.w / 2 + gv.laneW / 2), gv.h, self.cars)
                 total_cars += 1
+                gv.current_cars += 1
             elif add_car == 1:
                 newCar = Car(Direction.South, int(
-                    w / 2 - laneW / 2), 0, self.cars)
+                    gv.w / 2 - gv.laneW / 2), 0, self.cars)
                 total_cars += 1
+                gv.current_cars += 1
             elif add_car == 2:
                 newCar = Car(Direction.East, 0, int(
-                    h / 2 + laneW / 2), self.cars)
+                    gv.h / 2 + gv.laneW / 2), self.cars)
                 total_cars += 1
+                gv.current_cars += 1
             elif add_car == 3:
-                newCar = Car(Direction.West, w, int(
-                    h / 2 - laneW / 2), self.cars)
+                newCar = Car(Direction.West, gv.w, int(
+                    gv.h / 2 - gv.laneW / 2), self.cars)
                 total_cars += 1
+                gv.current_cars += 1
             # If the newCar would collide, don't add it
             if newCar is not None and \
                     len(pg.sprite.spritecollide(newCar, self.cars, False)) > 1:
                 newCar.kill()
-                newCar.image.fill(BACKGROUND_COLOR)
+                newCar.image.fill(gv.BACKGROUND_COLOR)
                 total_cars -= 1
+                gv.current_cars -= 1
 
         if self.light_change < 40:
             self.green_lights = [Direction.North, Direction.South]
@@ -111,7 +118,8 @@ class Game:
         # remove all the cars in removed
         for car in removed:
             car.kill()
-            car.image.fill(BACKGROUND_COLOR)
+            gv.current_cars -= 1
+            car.image.fill(gv.BACKGROUND_COLOR)
 
         for event in pg.event.get():
             # if the user hit the 'X'
@@ -144,16 +152,23 @@ class Game:
             pg.display.set_caption('No Collide')
 
     def draw(self):
+        global current_cars
         elapsed = int(time.time() - start_time)
 
-        self.screen.fill(BACKGROUND_COLOR)
+        self.screen.fill(gv.BACKGROUND_COLOR)
 
         collisions_str = "Collisions: {}".format(total_collisions)
         total_cars_str = "Total Cars: {}".format(total_cars)
         time_str = "Time        : {}".format(elapsed)
 
+        if elapsed == 0:
+            throughput_str = "Throughput: {}".format(0)
+        else:
+            throughput_str = "Throughput: {}".format(
+                (total_cars - gv.current_cars) / elapsed)
+
         debug_text(self.screen, [collisions_str,
-                                 total_cars_str, time_str] + car_pos)
+                                 total_cars_str, time_str, throughput_str])
         self.cars.draw(self.screen)
 
     def run(self):
